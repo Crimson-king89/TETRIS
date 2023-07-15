@@ -1,0 +1,41 @@
+// Define characters
+var naruto = {
+  name: "Naruto Uzumaki",
+  health: 100,
+  attack: function() {
+    return Math.floor(Math.random() * 10) + 1;
+  }
+};
+
+var sasuke = {
+  name: "Sasuke Uchiha",
+  health: 100,
+  attack: function() {
+    return Math.floor(Math.random() * 10) + 1;
+  }
+};
+
+// Game loop
+while (naruto.health > 0 && sasuke.health > 0) {
+  // Naruto attacks Sasuke
+  var narutoAttack = naruto.attack();
+  sasuke.health -= narutoAttack;
+  console.log(naruto.name + " attacks " + sasuke.name + " for " + narutoAttack + " damage. " + sasuke.name + "'s health is now " + sasuke.health + ".");
+
+  // Check if Sasuke is defeated
+  if (sasuke.health <= 0) {
+    console.log(sasuke.name + " is defeated! " + naruto.name + " wins!");
+    break;
+  }
+
+  // Sasuke attacks Naruto
+  var sasukeAttack = sasuke.attack();
+  naruto.health -= sasukeAttack;
+  console.log(sasuke.name + " attacks " + naruto.name + " for " + sasukeAttack + " damage. " + naruto.name + "'s health is now " + naruto.health + ".");
+
+  // Check if Naruto is defeated
+  if (naruto.health <= 0) {
+    console.log(naruto.name + " is defeated! " + sasuke.name + " wins!");
+    break;
+  }
+}
