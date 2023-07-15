@@ -1,0 +1,202 @@
+// Define the Tetris class
+class Tetris {
+  constructor() {
+    this.canvas = document.getElementById('tetris');
+    this.context = this.canvas.getContext('2d');
+    this.context.scale(20, 20);
+    
+    this.board = this.createBoard(12, 20);
+    this.piece = this.createPiece();
+    
+    this.score = 0;
+    this.gameOver = false;
+    
+    this.update();
+  }
+  
+  // Create the game board
+  createBoard(width, height) {
+    const board = [];
+    while (height--) {
+      board.push(new Array(width).fill(0));
+    }
+    return board;
+  }
+  
+  // Create a Tetris piece
+  createPiece() {
+    const pieces = 'ILJOTSZ';
+    const piece = {};
+    const index = Math.floor(Math.random() * pieces.length);
+    piece.shape = this.getShape(pieces[index]);
+    piece.x = Math.floor((this.board[0].length - piece.shape[0].length) / 2);
+    piece.y = 0;
+    return piece;
+  }
+  
+  // Get the shape of a Tetris piece
+  getShape(type) {
+    if (type === 'I') {
+      return [[1, 1, 1, 1]];
+    } else if (type === 'L') {
+      return [[1, 1, 1], [1, 0, 0]];
+    } else if (type === 'J') {
+      return [[1, 1, 1], [0, 0, 1]];
+    } else if (type === 'O') {
+      return [[1, 1], [1, 1]];
+    } else if (type === 'T') {
+      return [[1, 1, 1], [0, 1, 0]];
+    } else if (type === 'S') {
+      return [[0, 1, 1], [1, 1, 0]];
+    } else if (type === 'Z') {
+      return [[1, 1, 0], [0, 1, 1]];
+    }
+  }
+  
+  // Draw the Tetris piece on the canvas
+  draw() {
+    this.context.fillStyle = '#000';
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    this.drawMatrix(this.board, { x: 0, y: 0 });
+    this.drawMatrix(this.piece.shape, { x: this.piece.x, y: this.piece.y });
+  }
+  
+  // Draw a matrix on the canvas
+  drawMatrix(matrix, offset) {
+    matrix.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if (value !== 0) {
+          this.context.fillStyle = 'cyan';
+          this.context.fillRect(x + offset.x, y + offset.y, 1, 1);
+        }
+      });
+    });
+  }
+  
+  // Merge the current piece with the board
+  merge() {
+    this.piece.shape.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if (value !== 0) {
+          this.board[y + this.piece.y][x + this.piece.x] = value;
+        }
+      });
+    });
+  }
+  
+  // Move the piece down
+  moveDown() {
+    this.piece.y++;
+    if (this.collide()) {
+      this.piece.y--;
+      this.merge();
+      this.piece = this.createPiece();
+      if (this.collide()) {
+        this.gameOver = true;
+      }
+    }
+  }
+  
+  // Move the piece left
+  moveLeft() {
+    this.piece.x--;
+    if (this.collide()) {
+      this.piece.x++;
+    }
+  }
+  
+  // Move the piece right
+  moveRight() {
+    this.piece.x++;
+    if (this.collide()) {
+      this.piece.x--;
+    }
+  }
+  
+  // Rotate the piece
+  rotate() {
+    this.rotateMatrix(this.piece.shape);
+    if (this.collide()) {
+      this.rotateMatrix(this.piece.shape, -1);
+    }
+  }
+  
+  // Rotate a matrix
+  rotateMatrix(matrix, direction = 1) {
+    const temp = matrix.map((row, y) =>
+      row.map((_, x) => matrix[x][matrix.length - 1 - y])
+    );
+    if (direction === -1) {
+      matrix.forEach((row, y) =>
+        row.forEach((_, x) => (matrix[y][x] = temp[y][x]))
+      );
+    } else {
+      temp.forEach((row, y) =>
+        row.forEach((_, x) => (matrix[y][x] = temp[y][x]))
+      );
+    }
+  }
+  
+  // Check if the piece collides with the board
+  collide() {
+    const shape = this.piece.shape;
+    const x = this.piece.x;
+    const y = this.piece.y;
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (
+          shape[row][col] !== 0 &&
+          (this.board[row + y] && this.board[row + y][col + x]) !== 0
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  // Clear completed rows
+  clearRows() {
+    outer: for (let y = this.board.length - 1; y >= 0; y--) {
+      for (let x = 0; x < this.board[y].length; x++) {
+        if (this.board[y][x] === 0) {
+          continue outer;
+        }
+      }
+      const row = this.board.splice(y, 1)[0].fill(0);
+      this.board.unshift(row);
+      this.score += 10;
+    }
+  }
+  
+  // Update the game state
+  update() {
+    this.draw();
+    if (!this.gameOver) {
+      this.moveDown();
+      this.clearRows();
+    }
+    if (!this.gameOver) {
+      setTimeout(() => this.update(), 1000);
+    } else {
+      this.context.fillStyle = '#000';
+      this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.fillStyle = '#fff';
+      this.context.font = '1px Arial';
+      this.context.fillText(
+        'Game Over!',
+        1,
+        this.canvas.height / 2 - 1
+      );
+      this.context.fillText(
+        `Score: ${this.score}`,
+        1,
+        this.canvas.height / 2 + 4
+      );
+    }
+  }
+}
+
+// Create an instance of Tetris
+const tetris = new Tetris();
